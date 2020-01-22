@@ -1,0 +1,159 @@
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+GET Specific Document
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+GET /<index>/_doc/1
+
+http://localhost:9200/articles/blog/2/
+
+curl -XGET http://localhost:9200/articles/blog/2/
+curl -XGET http://localhost:9200/articles/blog/2/?pretty
+
+
+
+GET /_all/_search?q=boty:japan 
+
+
+
+
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+Search Document
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+GET http://localhost:9200/_all/_search?q=japan
+
+
+http://localhost:9200/_all/_search?q=body:items
+http://localhost:9200/_all/_search?q=title:items
+
+{
+   "query":{
+      "query_string":{
+         "query":"any_string"
+      }
+   }
+}
+
+
+
+POST /schools/_search
+{
+   "query":{
+      "query_string":{
+         "query":"up"
+      }
+   }
+}
+
+
+
+
+curl -X PUT "localhost:9200/articles?pretty" -H 'Content-Type: application/json' -d'
+{
+  "mappings": {
+    "properties": {
+      "my_field": {
+        "type": "chin"
+      }
+    }
+  }
+}
+'
+
+
+
+Map your field
+
+curl -X PUT "localhost:9200/articles/_mapping/blog?pretty" -d'
+{
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "string",
+        "analyzer": "autocomplete"
+      }
+    }
+  }
+}
+'
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+Search As You Type
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+curl -XGET "http://localhost:9200/articles/blog/_search?pretty -d" 
+{
+	"query": {
+			"match": {
+					 "title": {
+							"query": "chi",
+							"analyzer": "standard"
+					 }
+			}
+	}
+
+}
+
+curl -XPUT 'http://localhost:9200/articles?pretty' -d '
+	{
+		"settings": {
+			"analytics": {
+				"filter": {
+					"autocomplete_filter": {
+						"type": "edge_ngram",
+						"min_gram": 1,
+						"max_gram": 20
+					}
+				},
+				"analyzer": {
+					"autocomplete": {
+						"type": "custom",
+						"tokenizer": "standard",
+						filter: ["lowercase", "autocomplete_filter"]
+					}
+				}
+			}
+		}
+	
+}'
+
+
+
+PUT articles
+{
+  "mappings": {
+    "properties": {
+      "my_field": {
+        "type": "search_as_you_type"
+      }
+    }
+  }
+}
+
+
+PUT articles/_doc/1?refresh
+{
+  "my_field": "quick brown fox jump lazy dog"
+}
+
+PUT articles/_doc/2?refresh
+{
+  "my_field": "The quick brown fox jumps lazy over the dog"
+}
+
+
+GET articles/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "brown",
+      "type": "bool_prefix",
+      "fields": [
+        "my_field",
+        "my_field._2gram",
+        "my_field._3gram"
+      ]
+    }
+  }
+}
+
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+POST or Insert Document
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
+
